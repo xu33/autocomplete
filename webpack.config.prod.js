@@ -4,10 +4,11 @@ var webpack = require('webpack');
 module.exports = {
   devtool: 'eval',
   entry: {
-    index: './src/index.js'
+    AutoComplete: './src/AutoComplete.js'
   },
   externals: {
-      // jquery: 'window.$'
+    jquery: 'window.$',
+    ejs: 'window.ejs'
   },
   output: {
     path: path.join(__dirname, 'dist'),

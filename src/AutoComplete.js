@@ -31,7 +31,8 @@ AutoComplete.prototype = {
 			}
 
 			$.ajax({
-				url: this.options.url + '?value=' + value
+				url: this.options.url + value,
+        cache: false
 			}).done(response => {
 				this.showResult(response)
 			})
@@ -47,10 +48,6 @@ AutoComplete.prototype = {
 		$(document).unbind('click', this._clear)
 	},
 	showResult: function(items) {
-		if (!items || items.length < 1) {
-			return
-		}
-
 		this.index = -1	
 		this.items = items
 
@@ -60,10 +57,14 @@ AutoComplete.prototype = {
 			var offset = this.el.offset()
 			var wrap = $('<div>').css({
 				position:'absolute',
-				left: offset.left,
-				top: offset.left + this.el.height(),
+				left: offset.left - 1, // 减去border宽度
+				top: offset.top + this.el.outerHeight(),
 				display: 'none'
 			})
+
+      if (this.options.wrapClass) {
+        wrap.addClass(this.options.wrapClass)
+      }
 
 			$(document.body).append(wrap)
 
@@ -71,13 +72,13 @@ AutoComplete.prototype = {
 
 
 			this.resultWrap.on('mouseenter', 'li', (e) => {
-				var index = $(e.target).data('index')
+				var index = $(e.currentTarget).data('index')
 				if (index !== this.index) {
 					this.index = index
 					this.updateHtml()
 				}
 			}).on('click', 'li', (e) => {
-				this.index = $(e.target).data('index')
+				this.index = $(e.currentTarget).data('index')
 				this.options.onselect(this.items[this.index])
 			})
 
@@ -89,17 +90,16 @@ AutoComplete.prototype = {
 		this.resultWrap.css('display', '')
 	},
 	updateHtml: function() {
-		console.log('this.updateHtml fire')
-
 		this.resultWrap.html(
 			ejs.render(this.options.template, {
 				items: this.items,
 				index: this.index
-			})
+			}, {
+        delimiter: this.options.ejs.delimiter || '%'
+      })
 		)
 	},
 	handleDocumentKeyup: function(e) {
-		console.log(e.keyCode)
 		switch (e.keyCode) {
 			case 40: // down
 				this.index++
@@ -108,6 +108,7 @@ AutoComplete.prototype = {
 				} else if (this.index < 0) {
 					this.index = this.items.length - 1
 				}
+
 
 				this.updateHtml()
 				break
@@ -123,7 +124,7 @@ AutoComplete.prototype = {
 			case 13:
 				if (this.index > -1 && this.index < this.items.length) {
 					this.options.onselect(this.items[this.index])
-				} 
+				}
 		}
 	}
 }
